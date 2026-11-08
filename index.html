@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Timmy Gadgets | Your Tech, Our Priority</title>
 <style>
 :root{--navy:#071b3b;--blue:#1688ed;--pale:#f1f6ff;--ink:#0b1a36;--muted:#62718a}
@@ -212,7 +212,7 @@ footer a{color:inherit;text-decoration:none;overflow-wrap:anywhere}footer a:hove
       <p id="authSubtitle">Sign in to continue to your shopping experience.</p>
     </div>
     <button type="button" class="auth-google" id="googleSignIn">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
+      <img src="data:image/svg+xml,%3Csvg%20xmlns%3D%27http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%27%20viewBox%3D%270%200%2048%2048%27%3E%3Cpath%20fill%3D%27%23EA4335%27%20d%3D%27M24%209.5c3.54%200%206.71%201.22%209.21%203.6l6.85-6.85C35.9%202.38%2030.47%200%2024%200%2014.62%200%206.51%205.38%202.56%2013.22l7.98%206.19C12.43%2013.72%2017.74%209.5%2024%209.5z%27%2F%3E%3Cpath%20fill%3D%27%234285F4%27%20d%3D%27M46.98%2024.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58%202.96-2.26%205.48-4.78%207.18l7.73%206c4.51-4.18%207.09-10.36%207.09-17.65z%27%2F%3E%3Cpath%20fill%3D%27%23FBBC05%27%20d%3D%27M10.53%2028.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92%2016.46%200%2020.12%200%2024c0%203.88.92%207.54%202.56%2010.78l7.97-6.19z%27%2F%3E%3Cpath%20fill%3D%27%2334A853%27%20d%3D%27M24%2048c6.48%200%2011.93-2.13%2015.89-5.81l-7.73-6c-2.15%201.45-4.92%202.3-8.16%202.3-6.26%200-11.57-4.22-13.47-9.91l-7.98%206.19C6.51%2042.62%2014.62%2048%2024%2048z%27%2F%3E%3C%2Fsvg%3E" alt="">
       Continue with Google
     </button>
     <div class="auth-divider">OR CONTINUE WITH EMAIL</div>
@@ -230,7 +230,7 @@ footer a{color:inherit;text-decoration:none;overflow-wrap:anywhere}footer a:hove
       <button type="button" id="toggleAuthMode">Create Account</button>
     </div>
     <p class="auth-status" id="authStatus" aria-live="polite"></p>
-    <p class="auth-terms">Your sign-in is handled securely by Supabase Authentication. Your password is not stored in this webpage.</p>
+    <p class="auth-terms">Your sign-in is handled securely. Your password is never stored in this webpage.</p>
   </div>
 </div>
 
@@ -317,7 +317,7 @@ footer a{color:inherit;text-decoration:none;overflow-wrap:anywhere}footer a:hove
    </aside>
   </div>
   <section id="tgOrderResult" class="tg-panel" hidden aria-live="polite"></section>
-  <section class="tg-panel tg-track-panel"><h3>Track an order</h3><p class="tg-muted">Enter an order number created on this device to view its latest saved status.</p><div class="tg-coupon-row"><input id="tgTrackNumber" placeholder="e.g. TG-20261106-1234"><button type="button" id="tgTrackButton">Track order</button></div><div id="tgTrackResult" aria-live="polite"></div></section>
+  <section class="tg-panel tg-track-panel"><h3>Track an order</h3><p class="tg-muted">Enter your order number to view its latest saved status.</p><div class="tg-coupon-row"><input id="tgTrackNumber" placeholder="e.g. TG-20261106-1234"><button type="button" id="tgTrackButton">Track order</button></div><div id="tgTrackResult" aria-live="polite"></div></section>
   <p class="checkout-thanks">Thank you for choosing Timmy Gadgets.</p>
   <div class="checkout-home-wrap"><button type="button" class="checkout-home-btn" id="backToHome">Continue Shopping 🚀</button></div>
  </div>
@@ -455,31 +455,36 @@ function showCheckout(){
 }
 document.getElementById('checkout').addEventListener('click',showCheckout);
 document.getElementById('backToCart').addEventListener('click',()=>{document.getElementById('checkoutPage').classList.remove('show');openCart()});
-document.getElementById('tgApplyCoupon').addEventListener('click',()=>{
- const code=document.getElementById('tgCoupon').value.trim().toUpperCase();
- tgDiscountRate=0;
- document.getElementById('tgCouponMessage').textContent=code?'This code is not currently active. Please contact Timmy Gadgets for available promotions.':'Enter a promo code first.';
+document.getElementById('tgApplyCoupon').addEventListener('click',async()=>{
+ const code=document.getElementById('tgCoupon').value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g,'');
+ tgDiscountRate=0;window.tgCouponCode='';
+ const msg=document.getElementById('tgCouponMessage');
+ if(!code){msg.textContent='Enter a promo code first.';tgRefreshOrder();return}
+ try{const rate=await window.tgCheckCoupon(code);
+  if(rate){tgDiscountRate=rate;window.tgCouponCode=code;msg.textContent='Code applied: '+Math.round(tgDiscountRate*100)+'% off.'}
+  else msg.textContent='This code is not currently active. Please contact Timmy Gadgets for available promotions.'}
+ catch(e){msg.textContent='Could not check this code right now. Please try again.'}
  tgRefreshOrder();
 });
-document.getElementById('tgCustomerForm').addEventListener('submit',e=>{
+document.getElementById('tgCustomerForm').addEventListener('submit',async e=>{
  e.preventDefault();if(!cart.size){showCartToast();return}
  const customer={name:document.getElementById('tgFullName').value.trim(),phone:document.getElementById('tgPhone').value.trim(),email:document.getElementById('tgEmail').value.trim(),state:document.getElementById('tgState').value.trim(),city:document.getElementById('tgCity').value.trim(),landmark:document.getElementById('tgLandmark').value.trim(),address:document.getElementById('tgAddress').value.trim(),instructions:document.getElementById('tgInstructions').value.trim()};
  const items=[...cart.values()].map(x=>({name:x.product[0],unitPrice:priceNumber(x.product[1]),quantity:x.qty,lineTotal:priceNumber(x.product[1])*x.qty}));
  const subtotal=items.reduce((sum,x)=>sum+x.lineTotal,0),discount=Math.round(subtotal*tgDiscountRate);
- const order={id:'TG-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+Math.floor(1000+Math.random()*9000),createdAt:new Date().toISOString(),customer,items,subtotal,discount,productsTotal:subtotal-discount,delivery:'To be confirmed',paymentMethod:document.querySelector('input[name="paymentMethod"]:checked').value,paymentStatus:'Awaiting verified payment instructions',status:'Order received — awaiting confirmation'};
+ const order={id:'TG-'+new Date().toISOString().slice(0,10).replaceAll('-','')+'-'+Math.floor(100000+Math.random()*900000),createdAt:new Date().toISOString(),customer,items,subtotal,discount,productsTotal:subtotal-discount,delivery:'To be confirmed',paymentMethod:document.querySelector('input[name="paymentMethod"]:checked').value,paymentStatus:'Awaiting verified payment instructions',status:'Order received — awaiting confirmation'};
  tgOrders.unshift(order);
- try{localStorage.setItem('tgOrders',JSON.stringify(tgOrders));}catch(err){alert('Your browser could not save this order. Please send the order to Timmy Gadgets on WhatsApp.');}
- if(window.tgSupabase){window.tgSupabase.from('tg_orders').insert({order_number:order.id,customer,items,subtotal,discount,products_total:order.productsTotal,payment_method:order.paymentMethod,payment_status:order.paymentStatus,status:order.status}).then(r=>{if(r.error)console.warn('Order not saved online',r.error.message)});}
+ try{localStorage.setItem('tgOrders',JSON.stringify(tgOrders));}catch(err){}
+ let saved=false;try{await window.tgSaveOrder(order);saved=true}catch(err){console.warn(err)}
  const lines=items.map(x=>`• ${x.name} × ${x.quantity}: ${naira(x.lineTotal)}`).join('\n');
  const message=`Hello Timmy Gadgets, I would like to confirm my order.\nOrder: ${order.id}\n${lines}\nProducts total: ${naira(order.productsTotal)}\nDelivery: To be confirmed\nPayment method: ${order.paymentMethod}\nName: ${customer.name}\nPhone: ${customer.phone}\nEmail: ${customer.email||'Not provided'}\nAddress: ${customer.address}, ${customer.city}, ${customer.state}\nLandmark: ${customer.landmark||'Not provided'}\nDelivery instructions: ${customer.instructions||'None'}`;
  const result=document.getElementById('tgOrderResult');result.hidden=false;
- result.innerHTML=`<div class="tg-order-pending"><h3>Order received — ${order.id}</h3><p>Your order details have been saved in this browser. <b>Payment has not been collected.</b> Timmy Gadgets must confirm availability, delivery cost and verified payment instructions before you pay.</p><p><b>Order status:</b> ${order.status}</p><p><b>Payment:</b> ${order.paymentStatus}</p><p>Keep your order number. Order tracking on this page is available only in this browser on this device.</p><button type="button" class="tg-primary" id="tgSendWhatsApp">Send order to Timmy Gadgets on WhatsApp</button></div>`;
+ result.innerHTML=`<div class="tg-order-pending"><h3>Order received — ${order.id}</h3><p>${saved?'Your order has been saved securely.':'Your order could not be saved online, so it is stored in this browser only. Please send it on WhatsApp.'} <b>Payment has not been collected.</b> Timmy Gadgets must confirm availability, delivery cost and verified payment instructions before you pay.</p><p><b>Order status:</b> ${order.status}</p><p><b>Payment:</b> ${order.paymentStatus}</p><p>Keep your order number. ${saved?'You can track this order on this page any time you are signed in.':'Tracking will only work in this browser.'}</p><button type="button" class="tg-primary" id="tgSendWhatsApp">Send order to Timmy Gadgets on WhatsApp</button></div>`;
  document.getElementById('tgSendWhatsApp').addEventListener('click',()=>window.open('https://wa.me/2349076942564?text='+encodeURIComponent(message),'_blank','noopener'));
  result.scrollIntoView({behavior:'smooth',block:'start'});
 });
-document.getElementById('tgTrackButton').addEventListener('click',()=>{
+document.getElementById('tgTrackButton').addEventListener('click',async()=>{
  const id=document.getElementById('tgTrackNumber').value.trim().toUpperCase();
- const order=tgOrders.find(o=>o.id===id);const target=document.getElementById('tgTrackResult');
+ let order=tgOrders.find(o=>o.id===id);try{const r=await window.tgGetOrder(id);if(r)order=r}catch(err){}const target=document.getElementById('tgTrackResult');
  if(!order){target.innerHTML='<p class="tg-muted">Order not found in this browser. Check the order number or contact support on WhatsApp.</p>';return}
  target.innerHTML=`<div class="tg-order-pending"><b>${order.id}</b><p>Order date: ${new Date(order.createdAt).toLocaleString()}</p><p>Status: ${order.status}</p><p>Payment: ${order.paymentStatus}</p><p>Products total: ${naira(order.productsTotal)}</p><p>Delivery: ${order.delivery}</p></div>`;
 });
@@ -518,12 +523,38 @@ window.addEventListener('load',()=>{
 })();
 </script>
 
+<style>
+/* Responsive polish */
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{overflow-x:hidden}
+img,video{max-width:100%;height:auto}
+.auth-card,.checkout-wrap,.cat-body{min-width:0}
+.checkout-page,.cat-page,#authGate,.cart-panel{padding-left:max(0px,env(safe-area-inset-left));padding-right:max(0px,env(safe-area-inset-right))}
+.cart-panel,.checkout-page,.cat-page{overscroll-behavior:contain}
+@media(max-width:900px){.tg-checkout-layout{grid-template-columns:1fr!important}}
+@media(max-width:640px){
+ input,select,textarea{font-size:16px!important}
+ button,.cart-open,.checkout,.tg-primary,.auth-primary,.auth-google{min-height:44px}
+ .tg-form-grid{grid-template-columns:1fr!important}
+ .tg-coupon-row{flex-wrap:wrap}
+ .tg-coupon-row input{flex:1 1 100%;min-width:0}
+ .tg-coupon-row button{flex:1 1 100%}
+ .tg-panel{padding:16px}
+ .tg-toast{width:calc(100vw - 24px);max-width:420px}
+ .foot-item{min-width:0}
+ .foot-item small,.foot-item a{overflow-wrap:anywhere}
+}
+</style>
 <!-- Supabase Authentication -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script>
 (function(){
   const SUPABASE_URL = "https://myazxcvyaqyqtrjpghvf.supabase.co";
   const SUPABASE_KEY = "sb_publishable_IXruQdFSrLiXuawXicX8ww_XbRcC04t";
+  const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+    auth:{persistSession:true, autoRefreshToken:true, detectSessionInUrl:true, flowType:'pkce'}
+  }) : null;
+  window.tgSb = sb;
 
   const gate = document.getElementById('authGate');
   const form = document.getElementById('authForm');
@@ -534,9 +565,12 @@ window.addEventListener('load',()=>{
   const toggle = document.getElementById('toggleAuthMode');
   const forgot = document.getElementById('forgotPassword');
   const google = document.getElementById('googleSignIn');
+  const title = document.getElementById('authTitle');
+  const subtitle = document.getElementById('authSubtitle');
+  const emailLabel = email.closest('label');
+  const extras = [google, document.querySelector('.auth-divider'), document.querySelector('.auth-links')];
   let createMode = false;
-  let auth = null;
-  let sb = null;
+  let recoveryMode = false;
 
   const pwBtn = document.getElementById('togglePassword');
   if(pwBtn){
@@ -549,8 +583,6 @@ window.addEventListener('load',()=>{
       password.focus();
     });
   }
-
-  const configured = !!(SUPABASE_URL && SUPABASE_KEY);
 
   function message(text, error=true){
     status.textContent = text;
@@ -574,75 +606,104 @@ window.addEventListener('load',()=>{
       window.scrollTo(0,0);
     }catch(e){}
   }
+  function friendly(err){
+    const m = String((err && err.message) || '').toLowerCase();
+    if(m.includes('invalid login')) return 'Incorrect email or password.';
+    if(m.includes('already registered')) return 'An account with this email already exists. Please sign in.';
+    if(m.includes('email not confirmed')) return 'Please confirm your email first. Check your inbox for the link.';
+    if(m.includes('password should be')) return 'Please use a password with at least 6 characters.';
+    if(m.includes('valid email') || m.includes('invalid email')) return 'Please enter a valid email address.';
+    if(m.includes('rate limit') || m.includes('too many')) return 'Too many attempts. Please wait a little and try again.';
+    if(m.includes('same password') || m.includes('different from the old')) return 'Please choose a different password from your old one.';
+    return 'Something went wrong. Please check your details and try again.';
+  }
+  function setMode(){
+    title.textContent = createMode ? 'Create your account' : 'Welcome to Timmy Gadgets';
+    subtitle.textContent = createMode ? 'Create an account to get started.' : 'Sign in to continue to your shopping experience.';
+    submit.textContent = createMode ? 'Create Account' : 'Sign In';
+    password.autocomplete = createMode ? 'new-password' : 'current-password';
+    toggle.textContent = createMode ? 'Already have an account? Sign In' : 'Create Account';
+  }
+  function startRecovery(){
+    recoveryMode = true;
+    gate.hidden = false;
+    document.body.style.overflow = 'hidden';
+    title.textContent = 'Set a new password';
+    subtitle.textContent = 'Choose a new password for your account.';
+    submit.textContent = 'Update password';
+    if(emailLabel) emailLabel.style.display = 'none';
+    email.required = false;
+    extras.forEach(el=>{ if(el) el.style.display = 'none'; });
+    password.autocomplete = 'new-password';
+    password.value = '';
+    message('', false);
+  }
+  function endRecovery(){
+    recoveryMode = false;
+    if(emailLabel) emailLabel.style.display = '';
+    email.required = true;
+    extras.forEach(el=>{ if(el) el.style.display = ''; });
+    createMode = false;
+    setMode();
+  }
+
   document.body.style.overflow = 'hidden';
 
-  if(configured && window.supabase){
-    try{
-      sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-      window.tgSupabase = sb;
-      auth = sb.auth;
-      auth.onAuthStateChange((event, session)=>{
-        if(session && session.user) enterSite(); else showGate();
-      });
-    }catch(err){
-      message('Authentication could not be initialized. Please check your Supabase setup.');
-    }
+  if(sb){
+    sb.auth.onAuthStateChange((event, session)=>{
+      if(event === 'PASSWORD_RECOVERY'){ startRecovery(); return; }
+      if(recoveryMode) return;
+      if(session) enterSite(); else showGate();
+    });
+  } else {
+    message('Could not reach the sign-in service. Please check your internet connection and refresh.');
   }
 
   toggle.addEventListener('click',()=>{
     createMode = !createMode;
-    document.getElementById('authTitle').textContent = createMode ? 'Create your account' : 'Welcome to Timmy Gadgets';
-    document.getElementById('authSubtitle').textContent = createMode ? 'Create an account to get started.' : 'Sign in to continue to your shopping experience.';
-    submit.textContent = createMode ? 'Create Account' : 'Sign In';
-    password.autocomplete = createMode ? 'new-password' : 'current-password';
-    toggle.textContent = createMode ? 'Already have an account? Sign In' : 'Create Account';
+    setMode();
     message('', false);
   });
 
   form.addEventListener('submit',async e=>{
     e.preventDefault();
-    if(!configured || !auth){
-      message('Online sign-in is not connected yet.');
-      return;
-    }
+    if(!sb){ message('Could not reach the sign-in service. Please refresh the page.'); return; }
     submit.disabled = true;
-    submit.textContent = createMode ? 'Creating account…' : 'Signing in…';
+    submit.textContent = recoveryMode ? 'Updating…' : (createMode ? 'Creating account…' : 'Signing in…');
     try{
+      if(recoveryMode){
+        const {error} = await sb.auth.updateUser({password: password.value});
+        if(error) throw error;
+        endRecovery();
+        enterSite();
+        return;
+      }
       if(createMode){
-        const r = await auth.signUp({email:email.value.trim(),password:password.value});
-        if(r.error) throw r.error;
-        if(!r.data.session) message('Account created. Check your email to confirm it, then sign in.',false);
+        const {data, error} = await sb.auth.signUp({email: email.value.trim(), password: password.value, options:{emailRedirectTo: location.origin + location.pathname}});
+        if(error) throw error;
+        if(!data.session){
+          message('Account created. Check your email and tap the confirmation link, then sign in.', false);
+          createMode = false; setMode();
+        }
       } else {
-        const r = await auth.signInWithPassword({email:email.value.trim(),password:password.value});
-        if(r.error) throw r.error;
+        const {error} = await sb.auth.signInWithPassword({email: email.value.trim(), password: password.value});
+        if(error) throw error;
       }
     }catch(err){
-      const messages = {
-        'invalid_credentials':'Incorrect email or password.',
-        'user_already_exists':'An account with this email already exists. Please sign in.',
-        'weak_password':'Please use a password with at least 6 characters.',
-        'email_address_invalid':'Please enter a valid email address.',
-        'over_request_rate_limit':'Too many attempts. Please wait a little and try again.',
-        'over_email_send_rate_limit':'Too many attempts. Please wait a little and try again.',
-        'email_not_confirmed':'Please confirm your email first, then sign in.'
-      };
-      message(messages[err.code] || 'Sign-in failed. Please check your details and try again.');
+      message(friendly(err));
     }finally{
       submit.disabled = false;
-      submit.textContent = createMode ? 'Create Account' : 'Sign In';
+      submit.textContent = recoveryMode ? 'Update password' : (createMode ? 'Create Account' : 'Sign In');
     }
   });
 
   google.addEventListener('click',async()=>{
-    if(!configured || !auth){
-      message('Google sign-in is not connected yet.');
-      return;
-    }
-    try{
-      const r = await auth.signInWithOAuth({provider:'google',options:{redirectTo:window.location.origin}});
-      if(r.error) throw r.error;
-    }catch(err){
-      message('Google sign-in could not be completed. Please try again.');
+    if(!sb){ message('Could not reach the sign-in service. Please refresh the page.'); return; }
+    const {error} = await sb.auth.signInWithOAuth({provider:'google', options:{redirectTo: location.origin + location.pathname}});
+    if(error){
+      message(String(error.message||'').toLowerCase().includes('not enabled')
+        ? 'Google sign-in is not switched on yet. The site owner must enable the Google provider in Supabase.'
+        : 'Google sign-in could not be completed. Please try again.');
     }
   });
 
@@ -652,17 +713,10 @@ window.addEventListener('load',()=>{
       email.focus();
       return;
     }
-    if(!configured || !auth){
-      message('Password reset is not available yet.');
-      return;
-    }
-    try{
-      const r = await auth.resetPasswordForEmail(email.value.trim(),{redirectTo:window.location.origin});
-      if(r.error) throw r.error;
-      message('Password reset email sent. Check your inbox.',false);
-    }catch(err){
-      message('Could not send the reset email. Please check the address and try again.');
-    }
+    if(!sb){ message('Could not reach the sign-in service. Please refresh the page.'); return; }
+    const {error} = await sb.auth.resetPasswordForEmail(email.value.trim(), {redirectTo: location.origin + location.pathname});
+    if(error) message(friendly(error));
+    else message('If that email has an account, a reset link is on its way. Check your inbox.', false);
   });
 
   const logoutBtn = document.getElementById('logoutBtn');
@@ -674,7 +728,7 @@ window.addEventListener('load',()=>{
       byeToast.classList.add('show');
       setTimeout(async()=>{
         try{
-          if(auth) await auth.signOut(); else showGate();
+          if(sb) await sb.auth.signOut(); else showGate();
         }catch(err){
           message('Could not log out. Please try again.');
         }
@@ -685,5 +739,123 @@ window.addEventListener('load',()=>{
   }
 })();
 </script>
+
+<script>
+// Timmy Gadgets backend (Supabase): save orders, track orders, check coupons, live prices
+window.tgSaveOrder=async function(o){
+ const sb=window.tgSb;if(!sb)throw new Error('Offline');
+ const {data:{session}}=await sb.auth.getSession();if(!session)throw new Error('Not signed in');
+ const {error}=await sb.from('tg_orders').insert({order_number:o.id,customer:o.customer,items:o.items,subtotal:o.subtotal,discount:o.discount,products_total:o.productsTotal,payment_method:o.paymentMethod,coupon_code:window.tgCouponCode||'',delivery:o.delivery});
+ if(error)throw error};
+window.tgGetOrder=async function(id){
+ const sb=window.tgSb;if(!sb||!/^TG-\d{8}-\d{4,6}$/.test(id))return null;
+ try{const {data,error}=await sb.from('tg_orders').select('*').eq('order_number',id).maybeSingle();if(error||!data)return null;
+  return {id:data.order_number,createdAt:data.created_at,customer:data.customer,items:data.items,subtotal:Number(data.subtotal),discount:Number(data.discount),productsTotal:Number(data.products_total),delivery:data.delivery,paymentMethod:data.payment_method,paymentStatus:data.payment_status,status:data.status}}catch(e){return null}};
+window.tgCheckCoupon=async function(code){
+ const sb=window.tgSb;if(!sb)throw new Error('Offline');
+ const {data,error}=await sb.rpc('tg_check_coupon',{p_code:code});if(error)throw error;
+ return data==null?null:Number(data)};
+window.addEventListener('load',async()=>{try{const sb=window.tgSb;if(!sb)return;
+ const {data,error}=await sb.from('tg_prices').select('name,price');if(error||!data)return;let n=0;
+ data.forEach(p=>{const i=products.findIndex(x=>x[0]===p.name);if(i>-1&&typeof Number(p.price)==='number'&&!isNaN(Number(p.price))){products[i][1]=naira(Number(p.price));n++}});
+ if(n){renderProducts();updateCart()}}catch(e){}});
+</script>
+
+<style>
+#adminView{--navy:#071b3b;--blue:#1688ed;--bg:#f1f6ff;--ink:#0b1a36;--mut:#62718a}
+#adminView *{box-sizing:border-box}
+#adminView{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,Arial,sans-serif}
+#adminView header{background:var(--navy);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+#adminView main{max-width:860px;margin:0 auto;padding:14px}
+#adminView .tabs{display:flex;gap:8px;margin-bottom:14px}
+#adminView .tabs button{flex:1}
+#adminView button,#adminView input,#adminView select{font:inherit;padding:11px 14px;border-radius:10px;border:1px solid #cdd9ee;background:#fff}
+#adminView button{background:var(--navy);color:#fff;border:0;font-weight:700;cursor:pointer}
+#adminView button.alt{background:#fff;color:var(--ink);border:1px solid #cdd9ee}
+#adminView button.on{background:var(--blue)}
+#adminView .card{background:#fff;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 4px 14px #10264a14}
+#adminView .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+#adminView .row>*{flex:1;min-width:130px}
+#adminView small,#adminView .mut{color:var(--mut)}
+#adminView .warn{background:#fff3cd;color:#7a5600;padding:6px 10px;border-radius:8px;font-size:14px;margin-top:8px}
+#adminView #ad-login{max-width:380px;margin:60px auto;padding:20px}
+#adminView #ad-login input{width:100%;margin-bottom:10px}
+
+#adminView header{flex-wrap:wrap}
+#adminView .hd-actions{display:flex;gap:8px;flex-wrap:wrap}
+#adminView .hd-actions a{text-decoration:none}
+#adminView .card{overflow-wrap:anywhere}
+#adminView select{max-width:100%}
+#adminView main{max-width:1100px}
+#adminView #ad-orders{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:12px;align-items:start}
+#adminView #ad-orders .card,#adminView #ad-orders>p{margin:0}
+#adminView #ad-prices,#adminView #ad-clist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:12px}
+#adminView #ad-prices .card,#adminView #ad-clist .card{margin:0}
+@media(max-width:640px){#adminView{font-size:15px}#adminView input,#adminView select{font-size:16px}#adminView main{padding:10px}#adminView header{padding:12px}#adminView button{min-height:44px}#adminView .row>*{min-width:100%}#adminView .tabs{position:sticky;top:0;background:var(--bg);padding:6px 0;z-index:2}}
+</style>
+<div id="adminView" style="display:none;position:fixed;inset:0;z-index:3000000;overflow:auto">
+<div id="ad-login" class="card"><h2>Timmy Gadgets Admin</h2><input id="ad-em" type="email" placeholder="Email" autocomplete="email"><input id="ad-pw" type="password" placeholder="Password" autocomplete="current-password"><button id="ad-inBtn" style="width:100%">Sign in</button><p id="ad-msg" class="mut"></p><details style="margin-top:14px"><summary><b>First-time setup</b></summary><ol style="padding-left:20px"><li>Create your account on the store, or sign in here if you already have one.</li><li>If this page says "not an admin yet", copy the UID it shows.</li><li>Open Supabase, SQL Editor, and run the command below with your UID. Then sign in again.</li></ol><button id="ad-copySql" type="button" class="alt">Copy command</button><pre id="ad-sqlTxt" style="white-space:pre-wrap;font-size:12px;background:#f1f6ff;padding:10px;border-radius:8px;overflow:auto">insert into public.tg_admins (user_id) values ('PASTE-YOUR-UID-HERE');</pre></details><p><a href="#">&larr; Back to store</a></p></div>
+<div id="ad-app" hidden><header><b>Timmy Gadgets Admin</b><span class="hd-actions"><button class="alt" id="ad-refresh" type="button">Refresh</button><a href="#"><button class="alt" type="button">Store</button></a><button class="alt" id="ad-out" type="button">Sign out</button></span></header><main>
+<div class="tabs"><button data-t="orders" class="on">Orders</button><button data-t="coupons">Coupons</button><button data-t="prices">Prices</button></div>
+<section id="ad-orders"></section><section id="ad-coupons" hidden><div class="card"><b>New promo code</b><div class="row" style="margin-top:8px"><input id="ad-cc" placeholder="CODE e.g. WELCOME10"><input id="ad-cp" type="number" min="1" max="90" placeholder="Percent off"><button id="ad-cAdd" type="button">Save</button></div></div><div id="ad-clist"></div></section><section id="ad-prices" hidden></section></main></div>
+</div>
+<script>(function(){
+const sb=window.tgSb,$=id=>document.getElementById('ad-'+id);
+const SEED=[["iPhone 15 Pro",1200000],["AirPods Pro (2nd Gen)",450000],["Apple Watch Series 9",650000],["Sony WH-1000XM5",680000],["iPhone Case",25000],["Power Bank (20,000mAh)",45000]];
+const naira=n=>'₦'+Number(n).toLocaleString('en-NG');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const STATUS=['Order received — awaiting confirmation','Confirmed','Out for delivery','Delivered','Cancelled'];
+const PAY=['Awaiting verified payment instructions','Payment verified','Paid on delivery','Refunded'];
+const sel=(list,cur,k,id)=>`<select data-k="${k}" data-id="${esc(id)}">${(list.includes(cur)?list:[cur,...list]).map(x=>`<option${x===cur?' selected':''}>${esc(x)}</option>`).join('')}</select>`;
+let prices={},adminOpen=false,timer=null,uid='';
+if(!sb){$('msg').textContent='Could not reach the backend. Please refresh.';return}
+$('inBtn').onclick=async()=>{$('msg').textContent='';const {error}=await sb.auth.signInWithPassword({email:$('em').value.trim(),password:$('pw').value});if(error)$('msg').textContent=error.message};
+$('out').onclick=()=>sb.auth.signOut();
+$('refresh').onclick=()=>loadAll();
+$('copySql').onclick=e=>{const t=$('sqlTxt').textContent;navigator.clipboard.writeText(t).then(()=>e.target.textContent='Copied ✓')};
+sb.auth.onAuthStateChange(()=>{setTimeout(refreshAdmin,0)});
+async function refreshAdmin(){clearInterval(timer);if(!adminOpen)return;
+ const {data:{session}}=await sb.auth.getSession();const u=session&&session.user;
+ if(!u){$('login').hidden=false;$('app').hidden=true;return}
+ uid=u.id;
+ let ok=false;try{const {data}=await sb.from('tg_admins').select('user_id').eq('user_id',u.id).maybeSingle();ok=!!data}catch(e){}
+ if(!ok){$('login').hidden=false;$('app').hidden=true;$('msg').innerHTML='This account is not an admin yet.<br>Your UID: <b style="word-break:break-all">'+esc(u.id)+'</b>';$('sqlTxt').textContent="insert into public.tg_admins (user_id) values ('"+u.id+"');";return}
+ $('login').hidden=true;$('app').hidden=false;loadAll();timer=setInterval(loadOrders,20000)}
+function route(){adminOpen=location.hash==='#admin';document.getElementById('adminView').style.display=adminOpen?'block':'none';document.documentElement.style.overflow=adminOpen?'hidden':'';refreshAdmin()}
+window.addEventListener('hashchange',route);route();
+document.querySelectorAll('#adminView .tabs button').forEach(b=>b.onclick=()=>{document.querySelectorAll('#adminView .tabs button').forEach(x=>x.classList.toggle('on',x===b));['orders','coupons','prices'].forEach(t=>$(t).hidden=t!==b.dataset.t)});
+async function loadAll(){await loadPrices();await Promise.all([loadOrders(),loadCoupons()])}
+async function loadPrices(){const {data,error}=await sb.from('tg_prices').select('id,name,price').order('name');if(error){$('prices').innerHTML='<p class="mut">Could not load prices: '+esc(error.message)+'</p>';return}
+ prices={};data.forEach(p=>prices[p.name]=Number(p.price));drawPrices(data)}
+async function loadOrders(){const {data,error}=await sb.from('tg_orders').select('*').order('created_at',{ascending:false}).limit(100);
+ if(error){$('orders').innerHTML='<p class="mut">Could not load orders: '+esc(error.message)+'</p>';return}drawOrders(data)}
+async function loadCoupons(){const {data,error}=await sb.from('tg_coupons').select('*').order('created_at',{ascending:false});
+ if(error){$('clist').innerHTML='<p class="mut">Could not load coupons: '+esc(error.message)+'</p>';return}drawCoupons(data)}
+function drawOrders(rows){
+ if(document.activeElement&&document.activeElement.tagName==='SELECT'&&$('orders').contains(document.activeElement))return;
+ $('orders').innerHTML=!rows.length?'<p class="mut">No orders yet.</p>':rows.map(o=>{const c=o.customer||{},items=Array.isArray(o.items)?o.items:[];
+  const bad=items.filter(i=>prices[i.name]!==undefined&&prices[i.name]!==Number(i.unitPrice));
+  const ph=String(c.phone||'').replace(/\D/g,'').replace(/^0/,'234');
+  return `<div class="card"><b>${esc(o.order_number)}</b> <small>${o.created_at?new Date(o.created_at).toLocaleString():''}</small>
+  <p><b>${esc(c.name)}</b> · ${esc(c.phone)}<br><small>${esc(c.address)}, ${esc(c.city)}, ${esc(c.state)}</small></p>
+  <p>${items.map(i=>`${esc(i.name)} × ${esc(i.quantity)}`).join('<br>')}</p>
+  <p><b>${naira(o.products_total)}</b>${o.coupon_code?` <small>(code ${esc(o.coupon_code)})</small>`:''} · ${esc(o.payment_method)}</p>
+  ${bad.length?`<div class="warn">Price check: ${bad.map(i=>`${esc(i.name)} was ${naira(i.unitPrice)}, now ${naira(prices[i.name])}`).join('; ')}</div>`:''}
+  <div class="row" style="margin-top:10px">${sel(STATUS,o.status,'status',o.id)}${sel(PAY,o.payment_status,'payment_status',o.id)}<a href="https://wa.me/${ph}" target="_blank" rel="noopener"><button class="alt" style="width:100%" type="button">WhatsApp customer</button></a></div></div>`}).join('')}
+$('orders').onchange=async e=>{const t=e.target;if(t.dataset.k){const {error}=await sb.from('tg_orders').update({[t.dataset.k]:t.value}).eq('id',t.dataset.id);if(error)alert(error.message);else loadOrders()}};
+function drawCoupons(rows){
+ $('clist').innerHTML=!rows.length?'<p class="mut">No promo codes yet.</p>':rows.map(c=>`<div class="card row"><span><b>${esc(c.code)}</b> · ${Math.round(Number(c.rate)*100)}% off</span><button class="alt" type="button" data-tog="${esc(c.code)}" data-v="${!c.active}">${c.active?'Disable':'Enable'}</button><button class="alt" type="button" data-del="${esc(c.code)}">Delete</button></div>`).join('')}
+$('coupons').onclick=async e=>{const t=e.target;let r;
+ if(t.id==='ad-cAdd'){const code=$('cc').value.trim().toUpperCase().replace(/[^A-Z0-9_-]/g,''),p=Number($('cp').value);if(code.length>=2&&p>0&&p<=90){r=await sb.from('tg_coupons').upsert({code,rate:p/100,active:true});if(!r.error){$('cc').value='';$('cp').value=''}}else alert('Enter a code (2+ characters) and a percent between 1 and 90.')}
+ else if(t.dataset.tog)r=await sb.from('tg_coupons').update({active:t.dataset.v==='true'}).eq('code',t.dataset.tog);
+ else if(t.dataset.del&&confirm('Delete '+t.dataset.del+'?'))r=await sb.from('tg_coupons').delete().eq('code',t.dataset.del);
+ if(r&&r.error)alert(r.error.message);if(r)loadCoupons()};
+function drawPrices(rows){
+ $('prices').innerHTML=(!rows.length?`<div class="card"><p>No prices saved yet. Load your starter products to begin.</p><button id="ad-seed" type="button">Load starter products</button></div>`:'')+
+ rows.map(p=>`<div class="card row"><span><b>${esc(p.name)}</b></span><input type="number" min="0" value="${esc(Number(p.price))}" inputmode="numeric"><button type="button" data-save="${esc(p.id)}">Save price</button></div>`).join('')}
+$('prices').onclick=async e=>{const t=e.target;
+ if(t.id==='ad-seed'){const {error}=await sb.from('tg_prices').upsert(SEED.map(([n,p])=>({id:n.toLowerCase().replace(/[^a-z0-9]+/g,'-'),name:n,price:p})),{onConflict:'id'});if(error)alert(error.message);else loadPrices()}
+ if(t.dataset.save){const v=Number(t.parentElement.querySelector('input').value);if(v>=0){const {error}=await sb.from('tg_prices').update({price:v,updated_at:new Date().toISOString()}).eq('id',t.dataset.save);if(error)alert(error.message);else{t.textContent='Saved ✓';prices={};loadPrices()}}}};
+})();</script>
 
 </body></html>
