@@ -489,6 +489,42 @@ document.getElementById('tgTrackButton').addEventListener('click',async()=>{
  target.innerHTML=`<div class="tg-order-pending"><b>${order.id}</b><p>Order date: ${new Date(order.createdAt).toLocaleString()}</p><p>Status: ${order.status}</p><p>Payment: ${order.paymentStatus}</p><p>Products total: ${naira(order.productsTotal)}</p><p>Delivery: ${order.delivery}</p></div>`;
 });
 
+
+// Continue Shopping: play the rocket send-off, then return to a fresh shop
+(function(){
+ const btn=document.getElementById('backToHome'),rocket=document.getElementById('rocketLaunch');
+ if(!btn||!rocket)return;
+ let busy=false;
+ btn.addEventListener('click',()=>{
+  if(busy)return;busy=true;btn.disabled=true;
+  const scene=rocket.querySelector('.rocket-scene');
+  // restart the CSS animations each time
+  if(scene){const clone=scene.cloneNode(true);scene.replaceWith(clone)}
+  rocket.classList.add('show');rocket.setAttribute('aria-hidden','false');
+  requestAnimationFrame(()=>requestAnimationFrame(()=>rocket.classList.add('visible')));
+  setTimeout(()=>{
+   // reset everything behind the animation
+   try{cart.clear()}catch(e){}
+   tgDiscountRate=0;window.tgCouponCode='';
+   const f=document.getElementById('tgCustomerForm');if(f)f.reset();
+   const c=document.getElementById('tgCoupon');if(c)c.value='';
+   const cm=document.getElementById('tgCouponMessage');if(cm)cm.textContent='';
+   const r=document.getElementById('tgOrderResult');if(r){r.hidden=true;r.innerHTML=''}
+   const tn=document.getElementById('tgTrackNumber');if(tn)tn.value='';
+   const tr=document.getElementById('tgTrackResult');if(tr)tr.innerHTML='';
+   try{closeCart()}catch(e){}
+   document.getElementById('checkoutPage').classList.remove('show');
+   try{updateCart()}catch(e){}
+   try{tgRefreshOrder()}catch(e){}
+   window.scrollTo(0,0);
+  },1700);
+  setTimeout(()=>{
+   rocket.classList.remove('visible');
+   setTimeout(()=>{rocket.classList.remove('show');rocket.setAttribute('aria-hidden','true');btn.disabled=false;busy=false},480);
+  },2600);
+ });
+})();
+
 renderProducts();updateCart();
 
 // Show the dark-blue branded screen for one second on every page entry or refresh.
