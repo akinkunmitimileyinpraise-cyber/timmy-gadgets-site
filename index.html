@@ -201,6 +201,32 @@ footer a{color:inherit;text-decoration:none;overflow-wrap:anywhere}footer a:hove
 
 
 </style>
+<style id="tg-modern-css">
+/* ===== Scroll animation (ported from Port_2) ===== */
+.modern-scroll-progress{position:fixed;z-index:1000;top:0;left:0;width:0;height:4px;background:#1688ed;pointer-events:none;transition:width .08s linear}
+.modern-back-to-top{position:fixed;z-index:1000;right:18px;bottom:22px;width:46px;height:46px;border:0;border-radius:50%;background:#071b3b;color:#fff;font-size:25px;line-height:1;cursor:pointer;box-shadow:0 5px 18px rgba(0,0,0,.22);opacity:0;visibility:hidden;transform:translateY(10px);transition:opacity .2s ease,transform .2s ease,visibility .2s}
+.modern-back-to-top.is-visible{opacity:1;visibility:visible;transform:translateY(0)}
+.modern-reveal{opacity:0;transform:translateY(22px);transition:opacity .55s ease,transform .55s ease}
+.modern-reveal.modern-revealed{opacity:1;transform:none}
+@media(max-width:600px){.modern-back-to-top{right:13px;bottom:16px;width:42px;height:42px}}
+@media(prefers-reduced-motion:reduce){.modern-reveal,.modern-back-to-top{transition:none!important;transform:none!important}.modern-reveal{opacity:1!important}}
+
+/* ===== Store location map (ported from Port_2) ===== */
+.timmy-location{width:100%;margin:22px 0 14px;font-family:Inter,Arial,sans-serif}
+.timmy-location-heading{margin:0 0 16px}
+.timmy-location-kicker{color:#246fc5;font-size:11px;font-weight:800;letter-spacing:2px}
+.timmy-location-heading h2{color:#071b3b;font-size:clamp(25px,4vw,36px);margin:6px 0}
+.timmy-location-heading p{color:#5f6875;margin:0;font-size:14px}
+.timmy-map-frame{height:clamp(330px,55vw,570px);position:relative;overflow:hidden;border-radius:24px;background:#edf1f5;box-shadow:0 12px 38px rgba(16,43,99,.13);isolation:isolate}
+.timmy-map-frame iframe{width:100%;height:100%;border:0;display:block;filter:saturate(.82)}
+.timmy-map-label{position:absolute;z-index:2;left:22px;top:22px;display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:12px;background:rgba(255,255,255,.97);box-shadow:0 3px 16px rgba(0,0,0,.16);color:#26364c;pointer-events:none}
+.timmy-map-label strong{display:block;font-size:16px}
+.timmy-map-label small{display:block;margin-top:3px;color:#687487}
+.timmy-map-pin{width:23px;height:23px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;color:#fff;background:#d83a32;font-size:10px;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.timmy-map-open{position:absolute;z-index:2;right:20px;top:20px;display:inline-flex;align-items:center;gap:10px;padding:14px 20px;border-radius:9px;background:#fff;color:#2875c9;text-decoration:none;font-size:16px;font-weight:700;box-shadow:0 3px 15px rgba(0,0,0,.16)}
+.timmy-map-open:hover{background:#f4f8ff}
+@media(max-width:600px){.timmy-map-frame{height:390px;border-radius:16px}.timmy-map-label{left:10px;top:10px;padding:9px 11px;gap:9px}.timmy-map-label strong{font-size:13px}.timmy-map-label small{font-size:10px}.timmy-map-open{right:10px;top:10px;padding:11px 12px;font-size:13px}}
+</style>
 </head>
 <body>
 
@@ -248,6 +274,22 @@ footer a{color:inherit;text-decoration:none;overflow-wrap:anywhere}footer a:hove
 <section class="section"><h2 class="section-title">Shop by Category</h2><div class="cat-grid" id="catGrid"></div></section>
 <section class="section featured"><h2 class="section-title">Featured Products</h2><div class="product-grid" id="featuredGrid"></div></section>
 <div class="wa-wrap"><a class="wa-btn" id="waBtn" href="https://wa.me/2349076942564?text=Hi%20there%21%20I%20chatted%20because%20I%20want%20to%20talk%20about%20" rel="noopener noreferrer" aria-label="Chat with Timmy Gadgets on WhatsApp"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16.04 3C9.4 3 4 8.4 4 15.03c0 2.12.55 4.19 1.6 6.01L4 28l7.1-1.86a12 12 0 0 0 4.94 1.06h.01C22.68 27.2 28 21.8 28 15.17 28 8.4 22.68 3 16.04 3zm0 21.97h-.01a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-4.21 1.1 1.12-4.1-.24-.38a9.9 9.9 0 0 1-1.52-5.27c0-5.47 4.46-9.92 9.94-9.92 2.65 0 5.14 1.03 7.02 2.91a9.85 9.85 0 0 1 2.9 7.02c0 5.47-4.46 9.93-9.94 9.93zm5.45-7.43c-.3-.15-1.77-.87-2.04-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.94 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.48-.89-.79-1.49-1.77-1.66-2.07-.17-.3-.02-.46.13-.61.13-.13.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.07-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.31 1.26.49 1.7.63.71.23 1.36.2 1.87.12.57-.09 1.77-.72 2.02-1.42.25-.7.25-1.29.17-1.42-.07-.12-.27-.2-.57-.35z"/></svg>Chat us on Whatsapp</a></div>
+<!-- Timmy Gadgets location map -->
+<section class="timmy-location" id="location" aria-labelledby="timmy-location-title">
+  <div class="timmy-location-heading">
+    <span class="timmy-location-kicker">VISIT OUR STORE</span>
+    <h2 id="timmy-location-title">Timmy Gadgets</h2>
+    <p>8VVR+94R, Ibadan, Oyo State, Nigeria</p>
+  </div>
+  <div class="timmy-map-frame">
+    <iframe title="Timmy Gadgets location map" src="https://www.google.com/maps?q=8VVR%2B94R%20Ibadan%2C%20Oyo%20State%2C%20Nigeria&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+    <div class="timmy-map-label" aria-label="Timmy Gadgets map location">
+      <span class="timmy-map-pin" aria-hidden="true">●</span>
+      <span><strong>Timmy Gadgets</strong><small>8VVR+94R, Ibadan</small></span>
+    </div>
+    <a class="timmy-map-open" href="https://www.google.com/maps/search/?api=1&query=8VVR%2B94R%20Ibadan%2C%20Oyo%20State%2C%20Nigeria" target="_blank" rel="noopener noreferrer">Open in Maps <span aria-hidden="true">↗</span></a>
+  </div>
+</section>
 <footer>
  <div class="foot-item"><div class="foot-icon">⌖</div><div><b>Our Location</b><small><a href="https://www.google.com/maps/search/?api=1&query=Felele%2C%20Ibadan%2C%20Oyo%20State%2C%20Nigeria" target="_blank" rel="noopener noreferrer" aria-label="View Felele, Ibadan, Oyo State on Google Maps">Felele, Ibadan, Oyo State</a></small></div></div>
  <div class="foot-item"><div class="foot-icon">☎</div><div><b>Call Us</b><small><a href="tel:+2349076942564" aria-label="Call Timmy Gadgets at +234 907 694 2564">+234 907 694 2564</a></small></div></div>
@@ -894,4 +936,68 @@ $('prices').onclick=async e=>{const t=e.target;
  if(t.dataset.save){const v=Number(t.parentElement.querySelector('input').value);if(v>=0){const {error}=await sb.from('tg_prices').update({price:v,updated_at:new Date().toISOString()}).eq('id',t.dataset.save);if(error)alert(error.message);else{t.textContent='Saved ✓';prices={};loadPrices()}}}};
 })();</script>
 
+<script id="tg-modern-js">
+/* ===== Scroll animation (ported from Port_2) ===== */
+(function () {
+  "use strict";
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var progress = document.createElement("div");
+  progress.className = "modern-scroll-progress";
+  document.body.appendChild(progress);
+
+  var topButton = document.createElement("button");
+  topButton.className = "modern-back-to-top";
+  topButton.type = "button";
+  topButton.textContent = "\u2191";
+  topButton.setAttribute("aria-label", "Back to top");
+  document.body.appendChild(topButton);
+
+  function overlayOpen() {
+    var ids = ["cartPanel", "catPage", "checkoutPage"];
+    for (var i = 0; i < ids.length; i++) {
+      var el = document.getElementById(ids[i]);
+      if (el && el.classList.contains("show")) return true;
+    }
+    var gate = document.getElementById("authGate");
+    return !!(gate && !gate.hidden);
+  }
+
+  function updateScrollUI() {
+    var total = document.documentElement.scrollHeight - window.innerHeight;
+    var amount = total > 0 ? (window.scrollY / total) * 100 : 0;
+    progress.style.width = amount + "%";
+    topButton.classList.toggle("is-visible", window.scrollY > 350 && !overlayOpen());
+  }
+  window.addEventListener("scroll", updateScrollUI, { passive: true });
+  window.addEventListener("resize", updateScrollUI);
+
+  if ("MutationObserver" in window) {
+    var mo = new MutationObserver(updateScrollUI);
+    ["cartPanel", "catPage", "checkoutPage", "authGate"].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) mo.observe(el, { attributes: true, attributeFilter: ["class", "hidden"] });
+    });
+  }
+  updateScrollUI();
+
+  topButton.addEventListener("click", function () {
+    window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
+  });
+
+  var items = document.querySelectorAll(".section, .wa-wrap, .timmy-location, body > .wrap > footer");
+  if (!reduceMotion && "IntersectionObserver" in window) {
+    items.forEach(function (item) { item.classList.add("modern-reveal"); });
+    var observer = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("modern-revealed");
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.06 });
+    items.forEach(function (item) { observer.observe(item); });
+  }
+})();
+</script>
 </body></html>
